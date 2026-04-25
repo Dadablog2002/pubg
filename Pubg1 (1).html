@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRIME SHOP — Metro Royale</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #e8993a;
+    --gold-light: #f5c96a;
+    --fire: #d94f1e;
+    --fire2: #e07820;
+    --bg: #161410;
+    --bg2: #1f1b16;
+    --surface: rgba(255,255,255,0.03);
+    --text: #ede0c8;
+    --text-dim: rgba(237,224,200,0.55);
+    --border: rgba(232,153,58,0.18);
+    --border-h: rgba(232,153,58,0.45);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; overflow-x:hidden; }
+  body { background:var(--bg); color:var(--text); font-family:'Rajdhani',sans-serif; overflow-x:hidden; }
+
+  #particles-canvas { position:fixed; inset:0; pointer-events:none; z-index:0; }
+
+  .cursor-glow {
+    position:fixed; width:360px; height:360px; border-radius:50%;
+    background:radial-gradient(circle, rgba(232,153,58,0.05) 0%, transparent 70%);
+    pointer-events:none; z-index:0; transform:translate(-50%,-50%);
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position:relative; min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; overflow:hidden; z-index:1;
+  }
+  .hero-bg {
+    position:absolute; inset:0; z-index:0;
+    background:
+      radial-gradient(ellipse 85% 55% at 50% 22%, rgba(232,153,58,0.10) 0%, transparent 65%),
+      radial-gradient(ellipse 45% 65% at 8% 88%,  rgba(217,79,30,0.07)  0%, transparent 60%),
+      radial-gradient(ellipse 45% 65% at 92% 88%, rgba(217,79,30,0.07)  0%, transparent 60%),
+      linear-gradient(180deg, #161410 0%, #1c1208 50%, #161410 100%);
+  }
+  .hero-grid {
+    position:absolute; inset:0; z-index:0;
+    background-image:
+      linear-gradient(rgba(232,153,58,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,153,58,0.05) 1px, transparent 1px);
+    background-size:64px 64px;
+    mask-image:radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+  }
+  .hero-content { position:relative; z-index:2; padding:2rem; width:100%; max-width:100vw; }
+
+  .badge {
+    display:inline-block;
+    background:linear-gradient(135deg, rgba(232,153,58,0.14), rgba(217,79,30,0.09));
+    border:1px solid rgba(232,153,58,0.28);
+    color:var(--gold-light); font-family:'Orbitron',monospace;
+    font-size:0.62rem; letter-spacing:4px; text-transform:uppercase;
+    padding:7px 22px; border-radius:2px; margin-bottom:1.8rem;
+    animation:badgePulse 3.5s ease-in-out infinite;
+  }
+  @keyframes badgePulse {
+    0%,100% { box-shadow:0 0 12px rgba(232,153,58,0.18); }
+    50%      { box-shadow:0 0 30px rgba(232,153,58,0.48); }
+  }
+
+  .hero-title {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(5rem,16vw,12rem); line-height:0.88; letter-spacing:2px;
+    background:linear-gradient(140deg,#f5c96a 0%,#e8993a 38%,#d96820 68%,#c94010 100%);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    filter:drop-shadow(0 0 50px rgba(232,153,58,0.35));
+    animation:titleIn 1s cubic-bezier(0.16,1,0.3,1) both;
+  }
+  @keyframes titleIn {
+    from { opacity:0; transform:translateY(70px) scale(0.88); }
+    to   { opacity:1; transform:translateY(0) scale(1); }
+  }
+
+  .hero-sub {
+    font-family:'Orbitron',monospace; font-size:clamp(1rem,3vw,1.7rem);
+    letter-spacing:clamp(4px,2vw,10px); color:rgba(237,224,200,0.82); margin-top:0.4rem;
+    opacity:0; animation:fadeUp 0.8s 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(22px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .hero-desc {
+    max-width:580px; margin:2.2rem auto; font-size:1.15rem; line-height:1.8; color:var(--text-dim);
+    opacity:0; animation:fadeUp 0.8s 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
+  }
+  .hero-cta {
+    opacity:0; animation:fadeUp 0.8s 0.7s cubic-bezier(0.16,1,0.3,1) forwards;
+    display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display:inline-flex; align-items:center; gap:0.5rem; padding:14px 38px;
+    font-family:'Orbitron',monospace; font-size:0.72rem; font-weight:700;
+    letter-spacing:3px; text-transform:uppercase; text-decoration:none;
+    border-radius:2px; transition:all 0.3s ease; position:relative; overflow:hidden;
+  }
+  .btn::after {
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%);
+    transform:translateX(-120%); transition:transform 0.5s ease;
+  }
+  .btn:hover::after { transform:translateX(120%); }
+  .btn-primary {
+    background:linear-gradient(135deg,var(--gold),var(--fire2));
+    color:#0d0a06; font-weight:900; box-shadow:0 4px 30px rgba(232,153,58,0.35);
+  }
+  .btn-primary:hover { transform:translateY(-3px); box-shadow:0 8px 50px rgba(232,153,58,0.6); }
+  .btn-secondary {
+    background:rgba(232,153,58,0.07); color:var(--gold-light); border:1px solid var(--border);
+  }
+  .btn-secondary:hover { background:rgba(232,153,58,0.13); border-color:var(--border-h); transform:translateY(-3px); }
+
+  .scroll-hint {
+    position:absolute; bottom:2.5rem; left:50%; transform:translateX(-50%);
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    font-family:'Orbitron',monospace; font-size:0.6rem; letter-spacing:4px;
+    color:rgba(237,224,200,0.28); animation:fadeUp 1s 1.3s both;
+  }
+  .scroll-line {
+    width:1px; height:52px;
+    background:linear-gradient(to bottom,rgba(232,153,58,0.6),transparent);
+    animation:scrollP 2s ease-in-out infinite;
+  }
+  @keyframes scrollP { 0%,100%{opacity:0.25;transform:scaleY(1)} 50%{opacity:0.8;transform:scaleY(1.2)} }
+
+  /* ── TICKER ── */
+  .ticker-wrap {
+    overflow:hidden; border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+    background:rgba(232,153,58,0.025); padding:13px 0; position:relative; z-index:1;
+  }
+  .ticker { display:flex; white-space:nowrap; animation:ticker 28s linear infinite; }
+  .ticker-item { font-family:'Orbitron',monospace; font-size:0.62rem; letter-spacing:3px; color:rgba(232,153,58,0.6); padding:0 3.5rem; }
+  .ticker-item span { color:var(--fire2); margin:0 0.4rem; }
+  @keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+  /* ── SECTION BASE ── */
+  section { position:relative; z-index:1; padding:6rem 2rem; }
+  .section-label {
+    font-family:'Orbitron',monospace; font-size:0.6rem; letter-spacing:5px;
+    color:var(--gold); text-transform:uppercase; margin-bottom:0.7rem; opacity:0.6;
+  }
+  .section-title {
+    font-family:'Bebas Neue',sans-serif; font-size:clamp(2.6rem,6vw,5rem); line-height:1;
+    background:linear-gradient(135deg,var(--gold-light),var(--gold));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:0.8rem;
+  }
+  .fire-divider {
+    width:100%; height:1px; position:relative; z-index:1;
+    background:linear-gradient(90deg,transparent 0%,var(--fire) 30%,var(--gold) 50%,var(--fire) 70%,transparent 100%);
+    animation:divG 3s ease-in-out infinite;
+  }
+  @keyframes divG {
+    0%,100%{box-shadow:0 0 8px rgba(217,79,30,0.22)}
+    50%{box-shadow:0 0 22px rgba(217,79,30,0.55),0 0 50px rgba(232,153,58,0.18)}
+  }
+
+  /* ── SERVICES ── */
+  .services { background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 50%,var(--bg) 100%); }
+  .services-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr)); gap:1.4rem; max-width:1100px; margin:3rem auto 0; }
+
+  .service-card {
+    background:linear-gradient(145deg,rgba(255,255,255,0.045),rgba(255,255,255,0.02));
+    border:1px solid var(--border); border-radius:4px; padding:2.5rem 2.2rem;
+    position:relative; overflow:hidden; transition:border-color 0.35s,transform 0.35s,box-shadow 0.35s;
+  }
+  .service-card::before {
+    content:''; position:absolute; top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--gold),transparent);
+    transform:scaleX(0); transform-origin:center; transition:transform 0.4s ease;
+  }
+  .service-card:hover { border-color:var(--border-h); transform:translateY(-6px); box-shadow:0 20px 50px rgba(232,153,58,0.09); }
+  .service-card:hover::before { transform:scaleX(1); }
+
+  .service-icon-svg { width:44px;height:44px;margin-bottom:1.2rem;display:block;filter:drop-shadow(0 0 8px rgba(232,153,58,0.4)); }
+  .service-name { font-family:'Bebas Neue',sans-serif; font-size:2rem; color:var(--gold-light); margin-bottom:0.5rem; letter-spacing:1px; }
+  .service-desc { color:var(--text-dim); font-size:0.98rem; line-height:1.75; }
+  .card-glow { position:absolute;bottom:0;right:0;width:100px;height:100px;background:radial-gradient(circle at bottom right,rgba(232,153,58,0.1),transparent 70%);opacity:0;transition:opacity 0.35s; }
+  .service-card:hover .card-glow { opacity:1; }
+
+  /* ── GIVEAWAY ── */
+  .giveaway { text-align:center; background:linear-gradient(135deg,rgba(217,79,30,0.04) 0%,transparent 50%,rgba(232,153,58,0.04) 100%); }
+  .giveaway-box {
+    max-width:680px; margin:3rem auto 0;
+    background:linear-gradient(145deg,rgba(255,255,255,0.045),rgba(255,255,255,0.02));
+    border:1px solid var(--border); border-radius:6px; padding:3.5rem 3rem;
+    position:relative; overflow:hidden;
+  }
+  .giveaway-box::before {
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(circle at 10% 10%,rgba(232,153,58,0.08),transparent 50%),
+               radial-gradient(circle at 90% 90%,rgba(217,79,30,0.06),transparent 50%);
+  }
+  .giveaway-icon { width:56px;height:56px;margin:0 auto 1.5rem;display:block;filter:drop-shadow(0 0 12px rgba(232,153,58,0.5));animation:floatI 3.5s ease-in-out infinite; }
+  @keyframes floatI { 0%,100%{transform:translateY(0) rotate(-4deg)} 50%{transform:translateY(-10px) rotate(4deg)} }
+  .giveaway-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(1.8rem,4vw,3rem); background:linear-gradient(135deg,var(--gold-light),var(--fire2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:1rem; letter-spacing:1px; }
+  .giveaway-text { color:var(--text-dim); font-size:1.05rem; line-height:1.85; margin-bottom:2rem; position:relative; }
+
+  /* ── SOCIALS ── */
+  .socials { text-align:center; }
+  .socials-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr)); gap:1.1rem; max-width:860px; margin:3rem auto 0; }
+  .social-card {
+    display:flex; flex-direction:column; align-items:center; gap:0.7rem; padding:2.2rem 1.5rem;
+    background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:4px;
+    text-decoration:none; color:var(--text); transition:all 0.3s ease; position:relative; overflow:hidden;
+  }
+  .social-card:hover { background:rgba(232,153,58,0.07); border-color:var(--border-h); transform:translateY(-5px); box-shadow:0 14px 40px rgba(232,153,58,0.1); }
+  .social-svg { width:36px;height:36px;transition:transform 0.3s;filter:drop-shadow(0 0 6px rgba(232,153,58,0.3)); }
+  .social-card:hover .social-svg { transform:scale(1.18) rotate(-6deg); }
+  .social-name { font-family:'Orbitron',monospace; font-size:0.72rem; letter-spacing:2px; color:var(--gold); }
+  .social-handle { font-size:0.88rem; color:var(--text-dim); }
+
+  /* ── CONTACTS ── */
+  .contacts-inner { max-width:800px; margin:0 auto; text-align:center; }
+  .contact-links { display:flex; flex-wrap:wrap; gap:1rem; justify-content:center; margin-top:2.8rem; }
+  .contact-item {
+    display:flex; align-items:center; gap:0.7rem; padding:13px 26px;
+    background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:3px;
+    text-decoration:none; color:var(--text); font-size:0.96rem; line-height:1.5;
+    transition:all 0.3s; flex-wrap:wrap; word-break:break-word; min-width:0;
+  }
+  .contact-item:hover { background:rgba(232,153,58,0.09); border-color:var(--border-h); color:var(--gold-light); transform:translateY(-2px); box-shadow:0 8px 24px rgba(232,153,58,0.12); }
+  .contact-item strong { color:var(--gold); font-weight:700; }
+  .c-dot { display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;box-shadow:0 0 6px rgba(232,153,58,0.6); }
+
+  /* ── FOOTER ── */
+  footer { text-align:center; padding:3.5rem 2rem; border-top:1px solid var(--border); position:relative; z-index:1; }
+  .footer-logo { font-family:'Bebas Neue',sans-serif; font-size:2.6rem; background:linear-gradient(135deg,var(--gold-light),var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; letter-spacing:4px; }
+  .footer-sub { font-family:'Orbitron',monospace; font-size:0.6rem; letter-spacing:5px; color:rgba(237,224,200,0.25); margin-top:0.4rem; }
+  .footer-copy { margin-top:1.8rem; font-size:0.78rem; color:rgba(237,224,200,0.18); letter-spacing:1px; }
+
+  /* ── REVEAL ── */
+  .reveal { opacity:0; transform:translateY(28px); transition:opacity 0.65s ease,transform 0.65s ease; }
+  .reveal.visible { opacity:1; transform:translateY(0); }
+
+  /* ══════════════════════════════════════════
+     RESPONSIVE — tablet & mobile
+  ══════════════════════════════════════════ */
+
+  /* ── Tablet (≤768px) ── */
+  @media (max-width:768px) {
+    section { padding:4rem 1.2rem; }
+
+    /* Hero */
+    .hero-content { padding:1.2rem 1rem; }
+    .hero-title { font-size:clamp(3.8rem,22vw,7rem); line-height:0.9; letter-spacing:1px; }
+    .hero-sub { font-size:clamp(0.75rem,3.5vw,1.1rem); letter-spacing:5px; }
+    .hero-desc { font-size:1rem; margin:1.6rem auto; padding:0 0.5rem; }
+    .hero-cta { flex-direction:column; align-items:center; gap:0.75rem; }
+    .btn { padding:13px 30px; font-size:0.68rem; width:100%; max-width:300px; justify-content:center; }
+    .scroll-hint { bottom:1.5rem; }
+
+    /* Badge */
+    .badge { font-size:0.55rem; letter-spacing:3px; padding:6px 16px; margin-bottom:1.2rem; }
+
+    /* Ticker */
+    .ticker-item { font-size:0.58rem; padding:0 2rem; }
+
+    /* Section headings */
+    .section-title { font-size:clamp(2.2rem,8vw,3.5rem); }
+
+    /* Services */
+    .services-grid {
+      grid-template-columns:1fr;
+      gap:1rem;
+      margin:2rem auto 0;
+    }
+    .service-card { padding:2rem 1.6rem; }
+    .service-name { font-size:1.75rem; }
+    .service-desc { font-size:0.95rem; }
+
+    /* Giveaway */
+    .giveaway-box { padding:2.5rem 1.6rem; margin:2rem auto 0; }
+    .giveaway-title { font-size:clamp(1.5rem,6vw,2.2rem); }
+    .giveaway-text { font-size:0.98rem; }
+
+    /* Socials */
+    .socials-grid {
+      grid-template-columns:1fr;
+      gap:0.85rem;
+      margin:2rem auto 0;
+    }
+    .social-card { padding:1.8rem 1.2rem; flex-direction:row; justify-content:flex-start; gap:1.2rem; }
+    .social-svg { width:30px; height:30px; flex-shrink:0; }
+
+    /* Contacts */
+    .contact-links { flex-direction:column; gap:0.75rem; align-items:stretch; }
+    .contact-item {
+      padding:12px 18px;
+      font-size:0.9rem;
+      flex-wrap:wrap;
+      gap:0.4rem;
+      line-height:1.6;
+      word-break:break-word;
+    }
+
+    /* Footer */
+    footer { padding:2.5rem 1.2rem; }
+    .footer-logo { font-size:2rem; }
+    .footer-sub { letter-spacing:3px; }
+  }
+
+  /* ── Small phone (≤400px) ── */
+  @media (max-width:400px) {
+    .hero-title { font-size:clamp(3rem,24vw,5rem); }
+    .hero-sub { letter-spacing:3px; font-size:0.7rem; }
+    .badge { letter-spacing:2px; font-size:0.5rem; padding:5px 12px; }
+    .btn { font-size:0.62rem; letter-spacing:2px; padding:12px 20px; }
+    .service-card { padding:1.6rem 1.2rem; }
+    .giveaway-box { padding:2rem 1rem; }
+    .contact-item { font-size:0.82rem; padding:10px 14px; }
+    .section-title { font-size:clamp(2rem,10vw,3rem); }
+    .social-card { padding:1.4rem 1rem; }
+  }
+
+  /* ── Landscape phone (height ≤ 500px) ── */
+  @media (max-height:500px) and (orientation:landscape) {
+    .hero { min-height:auto; padding:3rem 1rem 2rem; }
+    .hero-title { font-size:clamp(2.8rem,10vh,5rem); }
+    .scroll-hint { display:none; }
+  }
+
+  /* ── Hover only on real pointer devices (not touch) ── */
+  @media (hover:none) {
+    .btn:hover { transform:none; box-shadow:none; }
+    .service-card:hover { transform:none; border-color:var(--border); }
+    .social-card:hover { transform:none; }
+    .contact-item:hover { transform:none; }
+    .cursor-glow { display:none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="particles-canvas"></canvas>
+<div class="cursor-glow" id="cursorGlow"></div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="badge">PUBG Mobile &middot; Metro Royale</div>
+    <h1 class="hero-title">PRIME<br>SHOP</h1>
+    <p class="hero-sub">Metro Royale</p>
+    <p class="hero-desc">Лут, сопровождения и розыгрыши. Лучший сервис для игроков Metro Royale — быстро, надёжно, с гарантией.</p>
+    <div class="hero-cta">
+      <a href="https://t.me/primeshop04" target="_blank" class="btn btn-primary">Написать менеджеру</a>
+      <a href="#services" class="btn btn-secondary">Наши услуги</a>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span>SCROLL</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker">
+    <span class="ticker-item">PRIME SHOP <span>&#9670;</span></span>
+    <span class="ticker-item">METRO ROYALE <span>&#9670;</span></span>
+    <span class="ticker-item">ЛУТ <span>&#9670;</span></span>
+    <span class="ticker-item">СОПРОВОЖДЕНИЯ <span>&#9670;</span></span>
+    <span class="ticker-item">РОЗЫГРЫШИ <span>&#9670;</span></span>
+    <span class="ticker-item">@PRIMESHOP04 <span>&#9670;</span></span>
+    <span class="ticker-item">PUBG MOBILE <span>&#9670;</span></span>
+    <span class="ticker-item">PRIME SHOP <span>&#9670;</span></span>
+    <span class="ticker-item">METRO ROYALE <span>&#9670;</span></span>
+    <span class="ticker-item">ЛУТ <span>&#9670;</span></span>
+    <span class="ticker-item">СОПРОВОЖДЕНИЯ <span>&#9670;</span></span>
+    <span class="ticker-item">РОЗЫГРЫШИ <span>&#9670;</span></span>
+    <span class="ticker-item">@PRIMESHOP04 <span>&#9670;</span></span>
+    <span class="ticker-item">PUBG MOBILE <span>&#9670;</span></span>
+  </div>
+</div>
+
+<!-- SERVICES -->
+<section class="services" id="services">
+  <div style="max-width:1100px;margin:0 auto;">
+    <div class="reveal">
+      <p class="section-label">Что мы предлагаем</p>
+      <h2 class="section-title">Наши услуги</h2>
+      <p style="color:var(--text-dim);max-width:480px;line-height:1.8;font-size:1.05rem;">Профессиональная помощь в Metro Royale — от фарма лута до полного сопровождения по карте.</p>
+    </div>
+    <div class="services-grid">
+
+      <div class="service-card reveal">
+        <svg class="service-icon-svg" viewBox="0 0 44 44" fill="none">
+          <rect x="10" y="14" width="24" height="24" rx="3" stroke="#e8993a" stroke-width="1.7"/>
+          <path d="M16 14v-3a6 6 0 0 1 12 0v3" stroke="#f5c96a" stroke-width="1.7" stroke-linecap="round"/>
+          <line x1="22" y1="20" x2="22" y2="30" stroke="#e8993a" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="17" y1="25" x2="27" y2="25" stroke="#e8993a" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <div class="service-name">Лутинг</div>
+        <p class="service-desc">Быстрый и эффективный фарм лута в Metro. Редкое снаряжение, оружие топ-тира и ценные ресурсы — всё для вашего прогресса.</p>
+        <div class="card-glow"></div>
+      </div>
+
+      <div class="service-card reveal">
+        <svg class="service-icon-svg" viewBox="0 0 44 44" fill="none">
+          <path d="M22 6 L36 11 V22 C36 30 29 36 22 38 C15 36 8 30 8 22 V11 Z" stroke="#e8993a" stroke-width="1.7" stroke-linejoin="round" fill="rgba(232,153,58,0.06)"/>
+          <path d="M16 22 l4 4 8-8" stroke="#f5c96a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="service-name">Сопровождение</div>
+        <p class="service-desc">Профессиональное прикрытие в Metro Royale. Наши игроки обеспечат вашу безопасность и помогут выйти с максимальным лутом.</p>
+        <div class="card-glow"></div>
+      </div>
+
+      <div class="service-card reveal">
+        <svg class="service-icon-svg" viewBox="0 0 44 44" fill="none">
+          <rect x="8" y="18" width="28" height="20" rx="2" stroke="#e8993a" stroke-width="1.7" fill="rgba(232,153,58,0.05)"/>
+          <rect x="6" y="12" width="32" height="8" rx="2" stroke="#e8993a" stroke-width="1.7"/>
+          <line x1="22" y1="12" x2="22" y2="38" stroke="#f5c96a" stroke-width="1.5"/>
+          <path d="M22 12 C18 12 15 9 17 6.5 C19 4 22 7 22 12" stroke="#f5c96a" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+          <path d="M22 12 C26 12 29 9 27 6.5 C25 4 22 7 22 12" stroke="#e8993a" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+        </svg>
+        <div class="service-name">Розыгрыши</div>
+        <p class="service-desc">Регулярные розыгрыши сопровождений и лутиков среди подписчиков. Подпишись на наш Telegram и участвуй бесплатно!</p>
+        <div class="card-glow"></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="fire-divider"></div>
+
+<!-- GIVEAWAY -->
+<section class="giveaway" id="giveaway">
+  <div class="reveal">
+    <p class="section-label">Акции и события</p>
+    <h2 class="section-title">Розыгрыши</h2>
+  </div>
+  <div class="giveaway-box reveal">
+    <svg class="giveaway-icon" viewBox="0 0 56 56" fill="none">
+      <polygon points="28,6 50,20 50,36 28,50 6,36 6,20" stroke="#e8993a" stroke-width="1.8" fill="rgba(232,153,58,0.07)"/>
+      <polygon points="28,14 42,22 42,34 28,42 14,34 14,22" stroke="#f5c96a" stroke-width="1.2" fill="rgba(245,201,106,0.05)"/>
+      <line x1="28" y1="6"  x2="28" y2="50" stroke="#e8993a" stroke-width="0.7" stroke-dasharray="2 3" opacity="0.35"/>
+      <line x1="6"  y1="28" x2="50" y2="28" stroke="#e8993a" stroke-width="0.7" stroke-dasharray="2 3" opacity="0.35"/>
+    </svg>
+    <div class="giveaway-title">Розыгрыши Сопровождений и Лутиков</div>
+    <p class="giveaway-text">Участвуй в регулярных розыгрышах и получи сопровождение или ценный лут абсолютно бесплатно. Следи за нашим Telegram-каналом, чтобы не пропустить следующий розыгрыш!</p>
+    <a href="https://t.me/primeshop04" target="_blank" class="btn btn-primary" style="display:inline-flex;">Участвовать в розыгрыше</a>
+  </div>
+</section>
+
+<div class="fire-divider"></div>
+
+<!-- SOCIALS -->
+<section class="socials" id="socials">
+  <div class="reveal">
+    <p class="section-label">Мы в сети</p>
+    <h2 class="section-title">Наши каналы</h2>
+    <p style="color:var(--text-dim);max-width:480px;margin:0 auto;line-height:1.8;font-size:1.05rem;">Подписывайся на все наши платформы — там розыгрыши, новости и эксклюзивный контент.</p>
+  </div>
+  <div class="socials-grid reveal">
+
+    <a href="https://t.me/primeshop04" target="_blank" class="social-card">
+      <svg class="social-svg" viewBox="0 0 36 36" fill="none">
+        <circle cx="18" cy="18" r="15" stroke="#e8993a" stroke-width="1.5"/>
+        <path d="M9 18 L27 11 L21 27 L17 21 Z" stroke="#f5c96a" stroke-width="1.4" stroke-linejoin="round" fill="rgba(245,201,106,0.08)"/>
+        <line x1="17" y1="21" x2="21" y2="27" stroke="#e8993a" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      <span class="social-name">Telegram</span>
+      <span class="social-handle">@primeshop04</span>
+    </a>
+
+    <a href="https://youtube.com/@primeshop04?si=qwyw8ceTHGQ4PpNm" target="_blank" class="social-card">
+      <svg class="social-svg" viewBox="0 0 36 36" fill="none">
+        <rect x="4" y="10" width="28" height="18" rx="5" stroke="#e8993a" stroke-width="1.5" fill="rgba(232,153,58,0.05)"/>
+        <polygon points="15,13 25,18 15,23" stroke="#f5c96a" stroke-width="1.3" fill="rgba(245,201,106,0.15)" stroke-linejoin="round"/>
+      </svg>
+      <span class="social-name">YouTube</span>
+      <span class="social-handle">@primeshop04</span>
+    </a>
+
+    <a href="https://tiktok.com/@prime.pubg77" target="_blank" class="social-card">
+      <svg class="social-svg" viewBox="0 0 36 36" fill="none">
+        <circle cx="18" cy="18" r="15" stroke="#e8993a" stroke-width="1.5"/>
+        <path d="M20 10 C20 14 24 14 26 14 V18 C24 18 21 17 20 15 V25 A6 6 0 1 1 16 19" stroke="#f5c96a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <span class="social-name">TikTok</span>
+      <span class="social-handle">@prime.pubg77</span>
+    </a>
+
+  </div>
+</section>
+
+<!-- CONTACTS -->
+<section class="contacts" id="contacts">
+  <div class="contacts-inner reveal">
+    <p class="section-label">Связаться с нами</p>
+    <h2 class="section-title">Контакты</h2>
+    <p style="color:var(--text-dim);line-height:1.8;font-size:1.05rem;margin-top:0.5rem;">Пишите нашему менеджеру по луту и сопровождениям, читайте отзывы или поделитесь ссылкой с другом.</p>
+    <div class="contact-links">
+      <a href="https://t.me/s_414243" target="_blank" class="contact-item">
+        <span class="c-dot"></span> Менеджер по луту / сопровождению &mdash; <strong>@s_414243</strong>
+      </a>
+      <a href="https://t.me/bbbbbbbb737363" target="_blank" class="contact-item">
+        <span class="c-dot"></span> Отзывы &mdash; <strong>@bbbbbbbb737363</strong>
+      </a>
+      <a href="https://t.me/primeshop04" target="_blank" class="contact-item">
+        <span class="c-dot"></span> Ссылка для друга &mdash; <strong>t.me/primeshop04</strong>
+      </a>
+    </div>
+  </div>
+</section>
+
+<div class="fire-divider"></div>
+<footer>
+  <div class="footer-logo">PRIME SHOP</div>
+  <div class="footer-sub">METRO ROYALE &middot; @PRIMESHOP04</div>
+  <p class="footer-copy">&#169; 2025 Prime Shop Metro Royale &middot; Все права защищены</p>
+</footer>
+
+<script>
+// PARTICLES
+const canvas = document.getElementById('particles-canvas');
+const ctx = canvas.getContext('2d');
+let W = canvas.width = window.innerWidth;
+let H = canvas.height = window.innerHeight;
+window.addEventListener('resize', () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; });
+
+class Particle {
+  constructor() { this.reset(true); }
+  reset(init = false) {
+    this.x = Math.random() * W;
+    this.y = init ? Math.random() * H : H + 20;
+    this.size   = Math.random() * 1.8 + 0.4;
+    this.vy     = -(Math.random() * 0.7 + 0.25);
+    this.vx     = (Math.random() - 0.5) * 0.35;
+    this.life   = 0;
+    this.maxL   = Math.random() * 220 + 100;
+    const t = Math.random();
+    if (t < 0.55) { this.r=232; this.g=153+(Math.random()*50|0); this.b=58; }
+    else           { this.r=220; this.g=110+(Math.random()*60|0); this.b=25; }
+  }
+  step() {
+    this.x += this.vx; this.y += this.vy; this.life++;
+    if (this.life > this.maxL || this.y < -10) this.reset();
+  }
+  draw() {
+    const a = (1 - this.life / this.maxL) * 0.55;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(${this.r},${this.g},${this.b},${a})`;
+    ctx.fill();
+  }
+}
+
+const pts = Array.from({length:110}, () => new Particle());
+(function loop() {
+  ctx.clearRect(0,0,W,H);
+  pts.forEach(p => { p.step(); p.draw(); });
+  requestAnimationFrame(loop);
+})();
+
+// CURSOR GLOW
+const glow = document.getElementById('cursorGlow');
+document.addEventListener('mousemove', e => {
+  glow.style.left = e.clientX + 'px';
+  glow.style.top  = e.clientY + 'px';
+});
+
+// SCROLL REVEAL
+const obs = new IntersectionObserver(entries => {
+  entries.forEach((e,i) => {
+    if (e.isIntersecting) setTimeout(() => e.target.classList.add('visible'), i*75);
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+// STAGGER service cards
+document.querySelectorAll('.service-card').forEach((c,i) => c.style.transitionDelay = (i*0.1)+'s');
+
+// HOVER radial glow on interactive cards
+document.querySelectorAll('.service-card, .social-card, .contact-item').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    const x = ((e.clientX-r.left)/r.width*100).toFixed(1);
+    const y = ((e.clientY-r.top)/r.height*100).toFixed(1);
+    card.style.background = `radial-gradient(circle at ${x}% ${y}%, rgba(232,153,58,0.1), rgba(217,79,30,0.04) 55%, transparent 75%)`;
+  });
+  card.addEventListener('mouseleave', () => card.style.background = '');
+});
+</script>
+</body>
+</html>
